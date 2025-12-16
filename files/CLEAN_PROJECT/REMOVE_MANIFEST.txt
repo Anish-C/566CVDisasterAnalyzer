@@ -1,0 +1,34 @@
+Purpose: List all files/folders outside `CLEAN_PROJECT` that are unrelated to the clean analyzer and can be removed before pushing.
+
+Recommended keep-only set:
+- files/CLEAN_PROJECT/** (entire folder)
+
+Remove these top-level items (outside CLEAN_PROJECT):
+- files/disaster_response_cv_complete/**
+- files/DOWNLOAD_GUIDE.md
+- files/fact_check_summary.md
+- files/IMPLEMENTATION_SUMMARY.md
+- files/midterm_report.md
+- files/disaster_response_cv_complete/** (entire legacy project)
+- archive (1)/** (training data not needed for clean, untrained baseline)
+
+Notes:
+- If you plan to keep training scripts later, you can retain `CLEAN_PROJECT/finetune_resnet.py` but it is not required for the untrained baseline.
+- The clean analyzer expects images under `files/CLEAN_PROJECT/data/` and writes outputs to `files/CLEAN_PROJECT/analysis_results/`.
+
+Safe removal PowerShell commands (run from repo root `c:\Users\hichh\566CVDisasterAnalyzer`):
+  # Preview what will be removed
+  Get-ChildItem -Path '.\files\disaster_response_cv_complete' -Recurse | Select-Object FullName | Select-Object -First 10
+
+  # Remove legacy project
+  Remove-Item -Path '.\files\disaster_response_cv_complete' -Recurse -Force
+
+  # Remove docs outside CLEAN_PROJECT
+  Remove-Item -Path '.\files\DOWNLOAD_GUIDE.md','\.\files\fact_check_summary.md','\.\files\IMPLEMENTATION_SUMMARY.md','\.\files\midterm_report.md' -Force
+
+  # Optional: remove training archive if not needed
+  Remove-Item -Path '.\archive (1)' -Recurse -Force
+
+Verification:
+  # After removal, only CLEAN_PROJECT should remain under files/
+  Get-ChildItem -Path '.\files' -Directory

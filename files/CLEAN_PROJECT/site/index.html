@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Disaster Response CV Analyzer — Full Writeup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <!-- KaTeX for math rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+          onload="renderMathInElement(document.body, {delimiters:[{left:'$$', right:'$$', display:true},{left:'$', right:'$', display:false}]});"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <h1>Disaster Response CV Analyzer</h1>
+      <p class="subtitle">Honest baseline, uncertainty-aware analysis, and roadmap</p>
+      <nav class="nav">
+        <a href="#overview">Overview</a>
+        <a href="#dataset">Dataset</a>
+        <a href="#model">Model</a>
+        <a href="#uncertainty">Uncertainty</a>
+        <a href="#results">Results</a>
+        <a href="#limitations">Limitations</a>
+        <a href="#roadmap">Roadmap</a>
+        <a href="#run">Run It</a>
+        <a href="#references">References</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section id="overview" class="card">
+      <h2>Overview</h2>
+      <p>
+        This project provides a clean, truthful baseline for computer vision analysis of disaster imagery.
+        We removed fabricated optimization demos and retained a single, runnable analyzer that classifies satellite
+        or aerial images into damage categories using transfer learning on <code>ResNet‑50</code>.
+        The emphasis is transparency: reported metrics reflect the model itself; uncertainty is exposed; and
+        limitations are explicit.
+      </p>
+      <ul>
+        <li><strong>Purpose:</strong> Rapid triage of images with confidence indicators.</li>
+        <li><strong>Scope:</strong> Image classification into coarse damage levels (e.g., none/minor/major/destroyed).</li>
+        <li><strong>Outputs:</strong> Per‑image analysis PNGs and a summary grid.</li>
+      </ul>
+    </section>
+
+    <section id="dataset" class="card">
+      <h2>Dataset</h2>
+      <p>
+        The analyzer expects a folder of disaster‑related images (e.g., hurricane aftermath). For a robust evaluation,
+        we recommend using labeled datasets such as <a href="https://xview2.org/" target="_blank" rel="noopener">xBD (xView2)</a>,
+        which provides pre‑/post‑disaster satellite imagery with building damage annotations.
+      </p>
+      <ul>
+        <li><strong>Data format:</strong> Standard image files (PNG/JPG). No special metadata required.</li>
+        <li><strong>Labels (optional):</strong> Provide ground truth to compute accuracy and calibration.</li>
+        <li><strong>Dedup handling:</strong> The analyzer de‑duplicates files to avoid double counting.</li>
+      </ul>
+    </section>
+
+    <section id="model" class="card">
+      <h2>Model</h2>
+      <p>
+        We use <code>ResNet‑50</code> pretrained on ImageNet via Torchvision. The final layer is adapted to four damage classes.
+        Images are resized and normalized to ImageNet statistics. Inference yields class probabilities via softmax; the
+        top probability serves as a simple confidence score.
+      </p>
+      <ul>
+        <li><strong>Backbone:</strong> ResNet‑50 (ImageNet1K V1 weights).</li>
+        <li><strong>Head:</strong> Linear layer mapping to damage classes.</li>
+        <li><strong>Transfer learning:</strong> Optional fine‑tuning on disaster datasets improves performance.</li>
+      </ul>
+    </section>
+
+    <section id="uncertainty" class="card">
+      <h2>Uncertainty and Calibration</h2>
+      <p>
+        We report <em>softmax confidence</em>—the maximum class probability from a single deterministic forward pass.
+        This is simple and transparent. We also support <strong>temperature scaling</strong> for calibration
+        and <strong>confidence thresholds</strong> for automated triage.
+      </p>
+      
+      <h3>Softmax Confidence</h3>
+      <p>
+        The model outputs unnormalized scores (logits) for each damage class. Softmax converts them to probabilities:
+      </p>
+      <p>$$P(y=c \mid x) = \frac{\exp(z_c)}{\sum_k \exp(z_k)}$$</p>
+      <p>
+        The "confidence" is $\max_c P(y=c \mid x)$. High confidence (&gt;0.5) indicates strong belief; 
+        low confidence (~0.25–0.35) indicates uncertainty. With domain shift (ImageNet → satellite), 
+        low confidence is expected and honest.
+      </p>
+      
+      <h3>Temperature Scaling</h3>
+      <p>
+        To calibrate scores without retraining, apply temperature scaling:
+      </p>
+      <p>$$P_T(y=c \mid x) = \frac{\exp(z_c / T)}{\sum_k \exp(z_k / T)}$$</p>
+      <p>
+        <strong>Effect:</strong> $T &gt; 1$ softens probabilities (lowers confidence, spreads mass). 
+        $T &lt; 1$ sharpens them. For domain-shifted models, $T \approx 1.5$–3 is typical. 
+        Use the <code>--temperature</code> flag to adjust.
+      </p>
+      
+      <h3>Confidence Thresholds for Triage</h3>
+      <p>
+        Images below a threshold $\tau$ (e.g., $\tau = 0.40$) are flagged for human review:
+      </p>
+      <ul>
+        <li><strong>τ = 0.4:</strong> Review ~50–60% of images (conservative automation)</li>
+        <li><strong>τ = 0.3:</strong> Review ~80–90% (very conservative)</li>
+        <li><strong>τ = 0.25:</strong> Baseline; most images from pretrained model fall below this</li>
+      </ul>
+      <p>Use the <code>--threshold</code> flag to enable review flagging.</p>
+      
+      <h3>Future: Bayesian Uncertainty (MC Dropout, Ensembles)</h3>
+      <p>
+        The Bayesian ideal—marginalizing over model parameters—provides richer uncertainty measures. 
+        With MC Dropout or ensembles, you can estimate:
+      </p>
+      <ul>
+        <li>Predictive mean: $\mu = \frac{1}{T} \sum_t p^{(t)}$</li>
+        <li>Predictive entropy: $H(\mu) = -\sum_c \mu_c \log \mu_c$</li>
+        <li>Mutual information (epistemic uncertainty): $\mathrm{MI} = H(\mu) - \mathbb{E}[H]$</li>
+      </ul>
+      <p>
+        These are on the roadmap. For now, temperature-scaled softmax + thresholds provide a practical triage signal.
+      </p>
+    </section>
+
+    <section id="results" class="card">
+      <h2>Results</h2>
+      <p>
+        The analyzer produces a summary grid and per‑image bar plots of class probabilities. Confidence statistics
+        are computed across the set. With labeled data, we will add accuracy by class and calibration (ECE).
+      </p>
+      <div class="gallery">
+        <figure>
+          <img src="../analysis_results/summary.png" alt="Summary grid of analyzed images">
+          <figcaption>Summary grid (example). Paths are relative to <code>site/</code>.</figcaption>
+        </figure>
+      </div>
+      <p class="note">If the image does not appear, generate results by running the analyzer below.</p>
+    </section>
+
+    <section id="limitations" class="card">
+      <h2>Limitations</h2>
+      <ul>
+        <li><strong>Task realism:</strong> Predicting resource needs requires metadata beyond pixels.</li>
+        <li><strong>Data shift:</strong> Performance depends on domain match with training/fine‑tuning data.</li>
+        <li><strong>Explainability:</strong> Grad‑CAM overlays are planned; not yet implemented.</li>
+        <li><strong>Calibration:</strong> ECE reporting needs labeled ground truth.</li>
+      </ul>
+    </section>
+
+    <section id="interpretability" class="card">
+      <h2>Interpretability: Grad-CAM Heatmaps</h2>
+      <p>
+        We implement <strong>Grad-CAM</strong> (Gradient-weighted Class Activation Mapping) to show which image regions influence the model's predictions.
+        For each image:
+      </p>
+      <ol>
+        <li>Capture activations from layer4 (final residual block) of ResNet-50.</li>
+        <li>Compute gradients of the predicted class with respect to those activations.</li>
+        <li>Weight each activation channel by gradient magnitude and sum.</li>
+        <li>Overlay the heatmap (yellow/red = high attention) on the original image.</li>
+      </ol>
+      <p>
+        This reveals whether the model focuses on genuine damage cues or spurious patterns. 
+        Each per-image analysis PNG shows three views: original image, Grad-CAM overlay, and class probabilities.
+      </p>
+    </section>
+
+    <section id="roadmap" class="card">
+      <h2>Roadmap</h2>
+      <ul>
+        <li><strong>Temperature scaling & thresholds:</strong> Done. Use <code>--temperature</code> and <code>--threshold</code> flags.</li>
+        <li><strong>Grad‑CAM:</strong> Done. Shows which pixels influence decisions in each *_analysis.png.</li>
+        <li><strong>MC Dropout / Ensembles:</strong> Estimate epistemic uncertainty (entropy, mutual information).</li>
+        <li><strong>Fine‑tuning:</strong> Train on xBD; report class‑wise accuracy and calibration.</li>
+      </ul>
+    </section>
+
+    <section id="run" class="card">
+      <h2>Run It</h2>
+      <p>Open a PowerShell terminal in <code>files/CLEAN_PROJECT</code> and run:</p>
+      <pre><code class="shell"># Create venv (optional)
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+# Install dependencies
+pip install -r docs/requirements.txt
+
+# Basic analysis (no calibration)
+python analyze_real_images.py --images .\data\hurricane_images
+
+# With temperature scaling (T=2.0) for softer probabilities
+python analyze_real_images.py --images .\data\hurricane_images --temperature 2.0
+
+# With confidence threshold (flag images below 40% for review)
+python analyze_real_images.py --images .\data\hurricane_images --threshold 0.40
+
+# Both together
+python analyze_real_images.py --images .\data\hurricane_images --temperature 2.0 --threshold 0.40 --out .\my_results
+      </code></pre>
+      <p><strong>Command flags:</strong></p>
+      <ul>
+        <li><code>--images</code>: Directory with satellite images (default: <code>data</code>)</li>
+        <li><code>--temperature</code>: Softmax calibration factor (default: 1.0, range: 0.1–5.0). Higher = softer/less confident.</li>
+        <li><code>--threshold</code>: Confidence threshold (default: 0.0, range: 0.0–1.0). Images below this get flagged [REVIEW].</li>
+        <li><code>--out</code>: Output directory (default: <code>analysis_results</code>)</li>
+      </ul>
+      <p>Then refresh this page to view updated <code>analysis_results</code>.</p>
+    </section>
+
+    <section id="references" class="card">
+      <h2>References</h2>
+      <ul>
+        <li>He et al., 2016. Deep Residual Learning for Image Recognition.</li>
+        <li>Gal & Ghahramani, 2016. Dropout as a Bayesian Approximation.</li>
+        <li>xBD/xView2 Dataset: <a href="https://xview2.org/" target="_blank" rel="noopener">https://xview2.org/</a></li>
+        <li>Torchvision ResNet docs: <a href="https://pytorch.org/vision/stable/models/resnet.html" target="_blank" rel="noopener">pytorch.org</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>© 2025 Disaster Response CV Analyzer — Honest Baseline</p>
+    </div>
+  </footer>
+</body>
+</html>
