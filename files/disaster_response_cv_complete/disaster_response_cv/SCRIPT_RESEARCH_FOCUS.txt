@@ -1,0 +1,64 @@
+# 5-MINUTE PRESENTATION SCRIPT - RESEARCH FOCUS
+## Read this while showing slides
+
+---
+
+## SLIDE 1: RESEARCH QUESTION (0:00-1:00)
+
+"CNNs output a confidence score, but what actually makes them certain?
+
+On hurricane imagery, why does the model insist 'Destroyed' on one roof and hesitate on another that looks similar to us?
+
+Our question: Which visual cues drive certainty vs. uncertainty? Can we open the black box and see what the network is keying on?"
+
+---
+
+## SLIDE 2: HYPOTHESIS (1:00-2:00)
+
+"We think certainty comes from specific visual patterns:
+
+• High-entropy textures that look like structural breakup
+• Strong edges between intact and damaged regions
+• Consistent damage at the right scale (uniformly destroyed or uniformly intact)
+
+We test whether these actually align with what the model uses."
+
+---
+
+## SLIDE 3: METHOD (2:00-3:00)
+
+"On 2000 hurricane images, we ran three probes:
+
+• Class activation maps: highlight pixels driving each decision; compare high-confidence vs low-confidence cases.
+
+• Feature map inspection: check internal layers—do high-certainty images activate different filters than uncertain ones?
+
+• Ablations: mask regions and measure confidence drop to see which parts make the model sure."
+
+---
+
+## SLIDE 4: FINDINGS (3:00-4:00)
+
+"What we found:
+
+• High confidence shows up on clean, uniform damage or fully intact roofs; partial damage creates uncertainty.
+
+• CAMs show the model fixates on roofline breaks and color/texture contrast—not true structural cues.
+
+• Confidence is highest on visually extreme cases, lowest on borderline ones—opposite of humans.
+
+• Certainty tracks visual distinctiveness, not actual damage severity."
+
+---
+
+## SLIDE 5: IMPLICATIONS (4:00-5:00)
+
+"Why this matters:
+
+• Confidence ≠ correctness. The model can be confidently wrong when visuals look familiar.
+
+• For disaster triage, raw confidence is unsafe. We need better uncertainty (ensembles/Bayesian) and human-in-the-loop checks on low-confidence cases.
+
+• Open questions: Can we disentangle 'visual distinctiveness confidence' from real accuracy? Can disagreeing models flag edge cases automatically?
+
+This is a research step toward interpretable, reliable CV for disasters."

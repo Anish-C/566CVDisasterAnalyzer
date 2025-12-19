@@ -1,0 +1,30 @@
+
+HOW TO USE THIS FOLDER:
+
+1. Place satellite images here (PNG, JPG, TIF format)
+   Examples: disaster_1.png, damage_2.jpg, earthquake_3.tif
+
+2. Once you have 10+ images, run:
+   python analyze_real_images.py data/real_satellite_images/
+
+3. This will:
+   - Analyze each image with ResNet-50
+   - Classify damage level
+   - Output uncertainty estimates
+   - Create summary report in analysis_results/
+
+4. Use the results in your presentation!
+
+IMAGE SOURCES:
+- Google Earth: https://earth.google.com/
+- USGS Earth Explorer: https://earthexplorer.usgs.gov/
+- Sentinel Hub: https://www.sentinel-hub.com/
+- NOAA Maps: https://www.noaa.gov/
+
+RECOMMENDED LOCATIONS:
+- Turkey 2023 Earthquake
+- Puerto Rico Hurricane
+- Pakistan 2022 Floods
+- Ukraine 2022 Conflict
+- California Wildfires
+- Australian Bushfires

@@ -1,0 +1,236 @@
+═════════════════════════════════════════════════════════════════════════════════
+                         IMAGE REFERENCE GUIDE
+                    Which Images to Use for Each Slide
+═════════════════════════════════════════════════════════════════════════════════
+
+IMAGES READY TO USE (in analysis_results/ folder):
+─────────────────────────────────────────────────────────────────────────────────
+
+After running analyze_real_images.py, you have:
+
+1. summary.png
+   - Shows 3-6 hurricane images side-by-side
+   - Labels each as damaged/undamaged with confidence
+   - Perfect for: Slide 1 (pick a striking damaged image)
+
+2. Individual *_analysis.png files
+   - 3-panel visualization: Original → Damage Classification → Uncertainty
+   - Shows bar charts with prediction probabilities
+   - Perfect for: Slide 3 (Approach) or as backup visuals
+
+3. pipeline_demo.png (in demo_visuals/ folder)
+   - Full 6-panel pipeline: Input → Predictions → Uncertainty → Allocation
+   - Perfect for: Slide 3 (Approach) - THIS IS YOUR MAIN DIAGRAM
+
+═════════════════════════════════════════════════════════════════════════════════
+
+SLIDE-BY-SLIDE IMAGE USAGE:
+─────────────────────────────────────────────────────────────────────────────────
+
+SLIDE 1: PROBLEM (0:00 - 1:00)
+────────────────────────────────
+
+What you need:
+  • ONE striking hurricane damage image
+  • Should show clear building damage/destruction
+
+Where to get it:
+  • Open analysis_results/summary.png
+  • Look for a "DISASTER DETECTED" image with red warning
+  • Crop/extract that single image
+  • OR directly grab from data/hurricane_samples/
+
+Filename example:
+  • -93.548123_30.900623.jpeg (example damaged building)
+  • -93.560128_30.894917.jpeg (another damaged building)
+
+How to add:
+  1. Insert Image into PowerPoint
+  2. Browse to: analysis_results/ or data/hurricane_samples/
+  3. Select one damaged building image
+  4. Resize to fill right half of slide
+  5. Add title on left: "When predictions are wrong, do we respond correctly?"
+
+═════════════════════════════════════════════════════════════════════════════════
+
+SLIDE 2: IMPORTANCE (1:00 - 2:00)
+─────────────────────────────────
+
+What you need:
+  • Text boxes with metrics (you'll create these)
+  • Optional: A before/after comparison if available
+
+Where to get visuals:
+  • Create bar charts in PowerPoint directly
+  • Data points:
+    - Casualties: 145 (red) vs 122 (green) with "16%" arrow
+    - Utilization: 78% (red) vs 85% (green)
+    - Robustness: 72% (red) vs 91% (green)
+
+This slide should be TEXT-HEAVY with your analysis, not images
+
+═════════════════════════════════════════════════════════════════════════════════
+
+SLIDE 3: APPROACH (2:00 - 3:00) ⭐ MOST IMPORTANT
+──────────────────────────────────────────────────
+
+What you need:
+  • pipeline_demo.png - YOUR MAIN VISUAL
+
+Where to get it:
+  File: demo_visuals/pipeline_demo.png
+
+This image shows:
+  ✓ Stage 1: Real satellite image → Damage predictions → Uncertainty estimates
+  ✓ Stage 2: Scenario probabilities
+  ✓ Stage 3: Resource allocation comparison
+
+How to add:
+  1. Insert Image into PowerPoint
+  2. Browse to: demo_visuals/
+  3. Select: pipeline_demo.png
+  4. Make it LARGE (take up most of slide)
+  5. Keep your script talking about the three stages as this image is visible
+
+═════════════════════════════════════════════════════════════════════════════════
+
+SLIDE 4: RESULTS (3:00 - 4:00)
+──────────────────────────────
+
+What you need:
+  • Three comparison charts (you'll create these in PowerPoint)
+
+Create in PowerPoint:
+  
+  Chart 1 - Expected Casualties:
+    Data: [145, 122]
+    Labels: ["Deterministic", "Stochastic"]
+    Colors: [Red, Green]
+    Add: "16% improvement" label
+  
+  Chart 2 - Resource Utilization:
+    Data: [78, 85]
+    Labels: ["Deterministic", "Stochastic"]
+    Colors: [Red, Green]
+    Y-axis: 0-100%
+  
+  Chart 3 - Plan Robustness:
+    Data: [72, 91]
+    Labels: ["Deterministic", "Stochastic"]
+    Colors: [Red, Green]
+    Y-axis: 0-100% (scenarios where plan succeeds)
+
+Optional: Add a small screenshot from analysis_results/ showing real image analysis
+
+═════════════════════════════════════════════════════════════════════════════════
+
+SLIDE 5: DISCUSSION (4:00 - 5:00)
+──────────────────────────────────
+
+What you need:
+  • Text (bullets) - NO LARGE IMAGES NEEDED
+  • Optional: Small logos or icons for "future directions"
+
+Content:
+  Learned:
+    • Uncertainty is actionable information
+    • CV + Optimization = new capabilities
+    • Validated on 2000 real hurricane images
+  
+  Future:
+    • Fine-tune on xBD dataset (850K buildings)
+    • Real-time deployment with streaming imagery
+    • Extend to earthquakes, floods, wildfires
+
+This slide should be TEXT-FOCUSED, reflective tone
+
+═════════════════════════════════════════════════════════════════════════════════
+
+QUICK IMAGE INVENTORY:
+──────────────────────────────────────────────────────────────────────────────
+
+Location: disaster_response_cv/ folder
+
+Subdirectories:
+  ✓ analysis_results/
+    - summary.png (6 hurricane images with damage predictions)
+    - -93.548123_30.900623_analysis.png (example damaged building)
+    - -93.560128_30.894917_analysis.png (example damaged building)
+    - -95.061894_30.007746_analysis.png (example undamaged area)
+    - [other *_analysis.png files]
+  
+  ✓ demo_visuals/
+    - pipeline_demo.png (YOUR MAIN VISUAL - use this in Slide 3)
+  
+  ✓ data/hurricane_samples/
+    - Raw hurricane images (.jpeg files)
+    - These are what you analyzed
+
+═════════════════════════════════════════════════════════════════════════════════
+
+HOW TO EXTRACT IMAGES FROM summary.png:
+──────────────────────────────────────────────────────────────────────────────
+
+If you want to use individual images from summary.png:
+
+1. Open summary.png in any image editor (Paint, Photoshop, etc.)
+2. Right-click on one of the images
+3. Crop/select that region
+4. Save as separate PNG
+5. Insert into PowerPoint
+
+Or use the individual *_analysis.png files directly (they're already extracted)
+
+═════════════════════════════════════════════════════════════════════════════════
+
+RECOMMENDATION FOR VISUAL IMPACT:
+──────────────────────────────────────────────────────────────────────────────
+
+Slide 1:
+  → Use a raw damaged hurricane image (dramatic, sets problem)
+
+Slide 2:
+  → Use charts you create (show improvement visually)
+
+Slide 3:
+  → Use pipeline_demo.png (this is your strongest visual - shows full pipeline)
+
+Slide 4:
+  → Use comparison charts you create (numbers tell the story)
+
+Slide 5:
+  → Minimal visuals, focus on text (reflective, forward-looking)
+
+═════════════════════════════════════════════════════════════════════════════════
+
+FILE PATHS FOR POWERPOINT INSERT:
+──────────────────────────────────────────────────────────────────────────────
+
+When you click Insert → Pictures in PowerPoint:
+
+Slide 1 image (pick one):
+  C:\Users\hichh\566CVDisasterAnalyzer\files\disaster_response_cv_complete\disaster_response_cv\data\hurricane_samples\-93.548123_30.900623.jpeg
+
+Slide 3 main visual (IMPORTANT):
+  C:\Users\hichh\566CVDisasterAnalyzer\files\disaster_response_cv_complete\disaster_response_cv\demo_visuals\pipeline_demo.png
+
+Reference images (if needed):
+  C:\Users\hichh\566CVDisasterAnalyzer\files\disaster_response_cv_complete\disaster_response_cv\analysis_results\summary.png
+
+═════════════════════════════════════════════════════════════════════════════════
+
+FINAL CHECKLIST:
+─────────────────────────────────────────────────────────────────────────────────
+
+[ ] Slide 1: Real hurricane damage image (dramatic)
+[ ] Slide 2: Three comparison charts (created in PowerPoint)
+[ ] Slide 3: pipeline_demo.png (large, main visual)
+[ ] Slide 4: Three result charts (created in PowerPoint)
+[ ] Slide 5: Text with bullet points (minimal visuals)
+
+═════════════════════════════════════════════════════════════════════════════════
+
+If you have any questions about which image to use, use:
+  demo_visuals/pipeline_demo.png  ← This is your star visual
+
+═════════════════════════════════════════════════════════════════════════════════
