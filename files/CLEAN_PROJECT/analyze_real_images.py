@@ -22,7 +22,7 @@ import cv2
 class HurricaneImageAnalyzer:
     """Analyze real hurricane satellite images for damage assessment"""
     
-    def __init__(self, device='cpu', temperature=1.0, threshold=0.0):
+    def __init__(self, device='cpu', temperature=1.0, threshold=0.0, weights_path: str = None):
         """
         Initialize with pre-trained ResNet-50
         
@@ -44,6 +44,17 @@ class HurricaneImageAnalyzer:
         
         self.model.to(device)
         self.model.eval()
+
+        # Optionally load fine-tuned weights
+        if weights_path is not None and os.path.isfile(weights_path):
+            try:
+                print(f"Loading checkpoint: {weights_path}")
+                ckpt = torch.load(weights_path, map_location=device)
+                state = ckpt.get('state_dict', ckpt)
+                self.model.load_state_dict(state, strict=False)
+                print("[OK] Weights loaded")
+            except Exception as e:
+                print(f"[WARN] Failed to load weights: {e}")
         
         # Image preprocessing (ImageNet standard)
         self.transform = transforms.Compose([
@@ -179,20 +190,34 @@ class HurricaneImageAnalyzer:
         heatmap = cv2.resize(heatmap, (224, 224))
         return heatmap
     
-    def analyze_directory(self, directory_path):
-        """Analyze all images in a directory"""
-        
+    def analyze_directory(self, directory_path, recursive=False, limit=None):
+        """Analyze images in a directory (optionally recursive, with limit)"""
         image_extensions = {'.jpg', '.jpeg', '.png', '.tif', '.tiff'}
-        image_files = set()
+        image_files = []
+
+        base = Path(directory_path)
+        if not base.exists():
+            print(f"No such directory: {directory_path}")
+            return []
+
+        # Build file list
+        if recursive:
+            # Search subfolders
+            for ext in image_extensions:
+                for pattern in [f'**/*{ext}', f'**/*{ext.upper()}']:
+                    image_files.extend(list(base.rglob(pattern)))
+        else:
+            # Only top-level files
+            for ext in image_extensions:
+                for pattern in [f'*{ext}', f'*{ext.upper()}']:
+                    image_files.extend(list(base.glob(pattern)))
+
+        # Deduplicate and sort
+        image_files = sorted(list({p for p in image_files if p.is_file()}))
         
-        # Find all image files (case-insensitive)
-        for ext in image_extensions:
-            for pattern in [f'*{ext}', f'*{ext.upper()}']:
-                for file in Path(directory_path).glob(pattern):
-                    if file not in image_files:
-                        image_files.add(file)
-        
-        image_files = sorted(list(image_files))
+        # Apply limit if requested
+        if limit is not None and len(image_files) > limit:
+            image_files = image_files[:limit]
         
         if not image_files:
             print(f"No images found in {directory_path}")
@@ -364,6 +389,16 @@ Examples:
                        help='Softmax temperature for calibration (default: 1.0, range: 0.1-5.0)')
     parser.add_argument('--threshold', '-th', type=float, default=0.0,
                        help='Confidence threshold for review flagging (default: 0.0, range: 0.0-1.0)')
+    parser.add_argument('--weights', '-w', default=None,
+                       help='Optional path to fine-tuned model checkpoint (.pt)')
+    parser.add_argument('--device', '-d', default='cpu', choices=['cpu','cuda'],
+                       help="Device for inference ('cpu' or 'cuda')")
+    parser.add_argument('--recursive', '-r', action='store_true',
+                       help='Search for images recursively in subfolders')
+    parser.add_argument('--limit', '-n', type=int, default=None,
+                       help='Limit the number of images analyzed (e.g., 1000)')
+    parser.add_argument('--weights', '-w', default=None,
+                       help='Optional path to fine-tuned model checkpoint (.pt)')
     
     args = parser.parse_args()
     
@@ -384,12 +419,17 @@ Examples:
     print(f"Image directory: {args.images}")
     print(f"Output directory: {args.out}")
     print(f"Temperature: {args.temperature}")
-    print(f"Threshold: {args.threshold:.2%}\n")
+    print(f"Threshold: {args.threshold:.2%}")
+    print(f"Device: {args.device}")
+    print(f"Recursive: {args.recursive}")
+    if args.limit:
+        print(f"Limit: {args.limit} images")
+    print("")
     
     # Analyze images
-    analyzer = HurricaneImageAnalyzer(device='cpu', temperature=args.temperature, 
-                                      threshold=args.threshold)
-    results = analyzer.analyze_directory(args.images)
+    analyzer = HurricaneImageAnalyzer(device=args.device, temperature=args.temperature, 
+                                      threshold=args.threshold, weights_path=args.weights)
+    results = analyzer.analyze_directory(args.images, recursive=args.recursive, limit=args.limit)
     
     if results:
         analyzer.print_summary(results)
