@@ -39,7 +39,12 @@ main { padding: 24px 0; }
 
 .gallery { display: grid; grid-template-columns: 1fr; gap: 16px; }
 .gallery img { width: 100%; height: auto; border: 1px solid var(--border); border-radius: 8px; }
-.gallery figcaption { color: var(--muted); font-size: 14px; margin-top: 6px; }
+.gallery figcaption { color: var(--muted); font-size: 14px; margin-top: 6px; text-align: center; }
+
+/* Multi-column layout for wider screens */
+@media (min-width: 768px) {
+  .gallery { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+}
 
 .note { color: var(--muted); font-style: italic; }
 

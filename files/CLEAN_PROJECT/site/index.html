@@ -28,6 +28,10 @@
         <a href="#limitations">Limitations</a>
         <a href="#roadmap">Roadmap</a>
         <a href="#run">Run It</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#how-to-read">How To Read Results</a>
+        <a href="#faq">FAQ</a>
+        <a href="#docs">Docs</a>
         <a href="#references">References</a>
       </nav>
     </div>
@@ -40,8 +44,13 @@
         This project provides a clean, truthful baseline for computer vision analysis of disaster imagery.
         We removed fabricated optimization demos and retained a single, runnable analyzer that classifies satellite
         or aerial images into damage categories using transfer learning on <code>ResNet‑50</code>.
+        <strong>The model is NOT fine-tuned on disaster data</strong>—it uses ImageNet pretrained weights as an 
+        honest "before" baseline to demonstrate the need for domain-specific training.
+      </p>
+      <p>
         The emphasis is transparency: reported metrics reflect the model itself; uncertainty is exposed; and
-        limitations are explicit.
+        limitations are explicit. Low confidence (~25-35%) on satellite imagery is expected and honest, 
+        not a flaw.
       </p>
       <ul>
         <li><strong>Purpose:</strong> Rapid triage of images with confidence indicators.</li>
@@ -137,16 +146,82 @@
     <section id="results" class="card">
       <h2>Results</h2>
       <p>
+        <strong>⚠️ Important:</strong> The model uses ImageNet pretrained weights and has <strong>not been trained on disaster imagery</strong>.
+        Predictions shown below are <strong>baseline/unvalidated</strong> and serve as a "before fine-tuning" reference.
+        The model achieved ~28% average confidence across 12 hurricane satellite images, indicating appropriate uncertainty.
+      </p>
+      <p>
         The analyzer produces a summary grid and per‑image bar plots of class probabilities. Confidence statistics
         are computed across the set. With labeled data, we will add accuracy by class and calibration (ECE).
       </p>
+      
+      <h3>Summary Grid</h3>
       <div class="gallery">
         <figure>
           <img src="../analysis_results/summary.png" alt="Summary grid of analyzed images">
-          <figcaption>Summary grid (example). Paths are relative to <code>site/</code>.</figcaption>
+          <figcaption>6-image summary grid showing predicted damage levels and confidence scores</figcaption>
         </figure>
       </div>
-      <p class="note">If the image does not appear, generate results by running the analyzer below.</p>
+      
+      <h3>Detailed Analysis Examples</h3>
+      <p>Sample outputs from our hurricane image dataset (12 total images analyzed):</p>
+      <div class="gallery">
+        <figure>
+          <img src="../analysis_results/-93.6141_30.754263_analysis.png" alt="Analysis 1">
+          <figcaption>Coastal damage assessment</figcaption>
+        </figure>
+        <figure>
+          <img src="../analysis_results/-95.062123_30.056714000000003_analysis.png" alt="Analysis 2">
+          <figcaption>Urban area damage detection</figcaption>
+        </figure>
+        <figure>
+          <img src="../analysis_results/-93.604017_30.793719_analysis.png" alt="Analysis 3">
+          <figcaption>Multi-structure damage classification</figcaption>
+        </figure>
+      </div>
+      <p class="note">If images do not appear, generate results by running the analyzer below. All 12 analysis images available in <code>analysis_results/</code>.</p>
+    </section>
+
+    <section id="how-it-works" class="card">
+      <h2>How It Works (Plain English)</h2>
+      <p>This section explains the end-to-end flow for readers who are new to computer vision.</p>
+      <ol>
+        <li><strong>Look & Guess:</strong> The model looks at a satellite image and <em>guesses</em> a damage level (no/minor/major/destroyed).</li>
+        <li><strong>Confidence:</strong> It also reports <em>how sure</em> it is (a number between 0% and 100%). Low confidence means the model is uncertain.</li>
+        <li><strong>Heatmap:</strong> A colored overlay (Grad‑CAM) shows <em>which parts</em> of the image influenced its decision.</li>
+        <li><strong>Calibration:</strong> We can soften or sharpen confidence with a setting called <code>temperature</code> to better reflect uncertainty.</li>
+        <li><strong>Triage:</strong> If confidence is below your chosen threshold, the image is automatically flagged for human review.</li>
+        <li><strong>Roadmap:</strong> In future phases, these per‑image predictions will feed <em>scenario generation</em> and <em>resource optimization</em> to help plan deployments.</li>
+      </ol>
+      <p class="note">Development history: Early demos used simulated predictions and synthetic images to prototype the pipeline. This site now shows an <strong>honest baseline</strong> on real hurricane imagery to validate uncertainty before integrating the full optimization system.</p>
+    </section>
+
+    <section id="how-to-read" class="card">
+      <h2>How To Read the Results</h2>
+      <ul>
+        <li><strong>Left panel (original image):</strong> The raw satellite photo.</li>
+        <li><strong>Center (heatmap overlay):</strong> Yellow/red areas are where the model paid the most attention (Grad‑CAM).</li>
+        <li><strong>Right (bars):</strong> The model’s estimated probabilities for each damage class; the tallest bar is its prediction.</li>
+        <li><strong>Confidence:</strong> A single number summarizing how certain the model is. Values around 25–35% are expected for a pretrained baseline on satellite imagery.</li>
+        <li><strong>Thresholds:</strong> If you set <code>--threshold 0.40</code>, any image below 40% confidence is flagged <code>[REVIEW]</code>.</li>
+        <li><strong>Caveat:</strong> Heatmaps may highlight textures learned from everyday images. Fine‑tuning on disaster data will make these highlights more meaningful.</li>
+      </ul>
+    </section>
+
+    <section id="faq" class="card">
+      <h2>FAQ</h2>
+      <h3>Is this accurate enough to make decisions?</h3>
+      <p>No. This is a <strong>baseline</strong> for research and education. Predictions are not validated for operational use. Low confidence is expected before fine‑tuning.</p>
+      <h3>What does “confidence” really mean?</h3>
+      <p>It’s the model’s self‑reported certainty from its probability distribution. High numbers mean it’s more sure; low numbers mean uncertainty.</p>
+      <h3>Why is the confidence so low?</h3>
+      <p>Because the model was trained on everyday images (ImageNet), not satellite disaster imagery. This <em>domain shift</em> makes it cautious—an honest signal we need disaster‑specific training.</p>
+      <h3>What are the heatmaps showing?</h3>
+      <p>They show where the model looked to make its decision. They are for interpretation, not ground truth. After fine‑tuning, these highlights should align more with real damage cues.</p>
+      <h3>Does this allocate resources automatically?</h3>
+      <p>Not yet. Future phases will turn these predictions into <em>scenarios</em> and use optimization to recommend resource allocation.</p>
+      <h3>How can we improve the model?</h3>
+      <p>By fine‑tuning on labeled disaster datasets (e.g., xBD), adding better uncertainty methods (MC Dropout/ensembles), and validating calibration (ECE) on ground truth.</p>
     </section>
 
     <section id="limitations" class="card">
@@ -154,7 +229,7 @@
       <ul>
         <li><strong>Task realism:</strong> Predicting resource needs requires metadata beyond pixels.</li>
         <li><strong>Data shift:</strong> Performance depends on domain match with training/fine‑tuning data.</li>
-        <li><strong>Explainability:</strong> Grad‑CAM overlays are planned; not yet implemented.</li>
+        <li><strong>Explainability:</strong> Grad‑CAM overlays implemented; interpretability caveats documented.</li>
         <li><strong>Calibration:</strong> ECE reporting needs labeled ground truth.</li>
       </ul>
     </section>
@@ -172,9 +247,29 @@
         <li>Overlay the heatmap (yellow/red = high attention) on the original image.</li>
       </ol>
       <p>
-        This reveals whether the model focuses on genuine damage cues or spurious patterns. 
+        <strong>Interpretation caveat:</strong> Since the model is pretrained on ImageNet (not disaster data), 
+        Grad-CAM may highlight textures/patterns the model learned from everyday objects rather than actual damage features.
+        This is why fine-tuning on disaster datasets (like xBD) is critical for reliable damage assessment.
         Each per-image analysis PNG shows three views: original image, Grad-CAM overlay, and class probabilities.
       </p>
+      
+      <h3>Example Grad-CAM Visualizations</h3>
+      <p>Below are sample analysis outputs showing how the model attends to different regions:</p>
+      <div class="gallery">
+        <figure>
+          <img src="../analysis_results/-93.548123_30.900623_analysis.png" alt="Grad-CAM analysis example 1">
+          <figcaption>Hurricane damage analysis with attention heatmap</figcaption>
+        </figure>
+        <figure>
+          <img src="../analysis_results/-93.590598_30.694956_analysis.png" alt="Grad-CAM analysis example 2">
+          <figcaption>Model attention on building structures</figcaption>
+        </figure>
+        <figure>
+          <img src="../analysis_results/-95.061894_30.007746_analysis.png" alt="Grad-CAM analysis example 3">
+          <figcaption>Heatmap showing focus regions for damage classification</figcaption>
+        </figure>
+      </div>
+      <p class="note">Each image shows: (left) original satellite image, (center) Grad-CAM heatmap overlay indicating model attention, (right) class probability distribution.</p>
     </section>
 
     <section id="roadmap" class="card">
@@ -195,7 +290,7 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 
 # Install dependencies
-pip install -r docs/requirements.txt
+    pip install torch torchvision numpy opencv-python matplotlib pillow
 
 # Basic analysis (no calibration)
 python analyze_real_images.py --images .\data\hurricane_images
@@ -217,6 +312,38 @@ python analyze_real_images.py --images .\data\hurricane_images --temperature 2.0
         <li><code>--out</code>: Output directory (default: <code>analysis_results</code>)</li>
       </ul>
       <p>Then refresh this page to view updated <code>analysis_results</code>.</p>
+    </section>
+
+    <section id="docs" class="card">
+      <h2>Docs</h2>
+      <p>
+        New to the codebase? Start with the full writeup and guides below. These are hosted on GitHub for easy reading.
+      </p>
+      <ul>
+        <li>
+          <strong>Full Writeup (README):</strong>
+          <a href="https://github.com/Anish-C/566CVDisasterAnalyzer/blob/main/files/CLEAN_PROJECT/README.md" target="_blank" rel="noopener">View on GitHub</a>
+        </li>
+        <li>
+          <strong>Project Purpose:</strong>
+          <a href="https://github.com/Anish-C/566CVDisasterAnalyzer/blob/main/files/CLEAN_PROJECT/PROJECT_PURPOSE.md" target="_blank" rel="noopener">PROJECT_PURPOSE.md</a>
+        </li>
+        <li>
+          <strong>Training Guide (Fine-tuning):</strong>
+          <a href="https://github.com/Anish-C/566CVDisasterAnalyzer/blob/main/files/CLEAN_PROJECT/TRAINING_GUIDE.md" target="_blank" rel="noopener">TRAINING_GUIDE.md</a>
+        </li>
+        <li>
+          <strong>Technical Writeup:</strong>
+          <a href="https://github.com/Anish-C/566CVDisasterAnalyzer/blob/main/files/CLEAN_PROJECT/docs/PROJECT_WRITEUP_FULL.txt" target="_blank" rel="noopener">PROJECT_WRITEUP_FULL.txt</a>
+        </li>
+        <li>
+          <strong>Full Pipeline (Legacy Implementation):</strong>
+          <a href="https://github.com/Anish-C/566CVDisasterAnalyzer/tree/main/files/disaster_response_cv_complete/disaster_response_cv" target="_blank" rel="noopener">disaster_response_cv_complete/</a>
+        </li>
+      </ul>
+      <p class="note">
+        Tip: The README includes a newcomer-friendly overview, Quick Start commands, architecture details, roadmap, dataset info, and disclaimers.
+      </p>
     </section>
 
     <section id="references" class="card">
